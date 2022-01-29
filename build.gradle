@@ -6,18 +6,21 @@ plugins {
     id "io.freefair.lombok" version "5.3.0"
 }
 
-version 'unspecified'
+group = 'com.rbacpro'
+version = '0.0.1-SNAPSHOT'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compileOnly 'org.projectlombok:lombok:1.18.22'
-    annotationProcessor 'org.projectlombok:lombok:1.18.22'
-    implementation 'org.springframework.data:spring-data-cassandra:3.3.1'
+    compileOnly 'org.projectlombok:lombok:1.18.8'
+    annotationProcessor 'org.projectlombok:lombok:1.18.8'
+    compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.20'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-data-rest'
-    compile group: 'org.springframework.boot', name: 'spring-boot-starter-parent', version: '2.4.1', ext: 'pom'
+
 }
 
 compileJava {
