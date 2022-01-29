@@ -1,0 +1,10 @@
+rootProject.name = 'rbacpro'
+
+def projects = ["server"]
+
+include(projects as String[])
+
+projects.forEach {
+    project(":" + it).name = it
+}
+
