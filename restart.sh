@@ -1,3 +1,4 @@
 brew services start mysql
-gradle build --continuous &
+gradle clean
+gradle build
 gradle bootRun

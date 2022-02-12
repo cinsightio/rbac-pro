@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @RestController
 @Transactional
-@RequestMapping(path = "v1/organization")
+@RequestMapping(path = "v1")
 public class OrganizationController {
 
     Logger logger = LoggerFactory.getLogger(OrganizationController.class);
@@ -23,7 +23,7 @@ public class OrganizationController {
     @Autowired
     private OrganizationRepository orgRepo;
 
-    @PostMapping("/create")
+    @PostMapping("/organization")
     public Organization create(@RequestBody Organization request) {
         Organization n = new Organization();
         n.setName(request.getName());
@@ -31,11 +31,12 @@ public class OrganizationController {
         n.setDescription(request.getDescription());
         n.setOwner(request.getOwner());
         n.setCreateTime(ZonedDateTime.now());
+        n.setId(request.getId());
         orgRepo.save(n);
         return orgRepo.save(n);
     }
 
-    @GetMapping("/{organizationId}")
+    @GetMapping("/organization/{organizationId}")
     public Organization list(@PathVariable String organizationId) {
         Optional<Organization> r = orgRepo.findById(organizationId);
         if (r.isPresent()) {

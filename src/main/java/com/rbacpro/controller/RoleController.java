@@ -2,6 +2,7 @@ package com.rbacpro.controller;
 
 
 import com.rbacpro.model.*;
+import com.rbacpro.repository.OrganizationRepository;
 import com.rbacpro.repository.RolePermissionRepository;
 import com.rbacpro.repository.RoleRepository;
 import org.slf4j.Logger;
@@ -14,7 +15,10 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @Transactional
@@ -26,11 +30,13 @@ public class RoleController {
     @Autowired
     private RoleRepository roleRepo;
     @Autowired
+    private OrganizationRepository orgRepo;
+    @Autowired
     private RolePermissionRepository rolePermissionRepo;
 
     @PostMapping("/role")
     public ResponseEntity<Role> create(@RequestBody Role request) {
-        logger.info("In create role.");
+        logger.info("Entering create new role.");
         Role n = new Role();
         n.setOrganization(request.getOrganization());
         n.setName(request.getName());
@@ -42,9 +48,16 @@ public class RoleController {
 
     @PostMapping("/role/permission")
     public ResponseEntity putPermission(@RequestBody RolePermission permission) {
-        logger.info("Putting permissions");
+        logger.info("Entering creating new permission.");
         try {
             logger.info(permission.toString());
+            if(!orgRepo.findById(permission.getOrganization()).isPresent()) {
+                return new ResponseEntity<>("Organization not found.", HttpStatus.NOT_FOUND);
+            }
+            if(!roleRepo.findById(permission.getRole()).isPresent()) {
+                return new ResponseEntity<>("Role not found.", HttpStatus.NOT_FOUND);
+            }
+
             rolePermissionRepo.save(permission);
         } catch (Exception e) {
            logger.error(e.toString());
@@ -55,8 +68,9 @@ public class RoleController {
 
     @DeleteMapping(value = "/role/permission")
     public ResponseEntity deletePermission(@RequestBody RolePermission permission) {
-        logger.info("Entering deleting permissions");
+        logger.info("Entering deleting permission.");
         try {
+            logger.info(permission.toString());
             rolePermissionRepo.delete(permission);
         } catch (Exception e) {
             logger.error(e.toString());
@@ -65,15 +79,36 @@ public class RoleController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping(path = "/role/{name}")
-    public @ResponseBody
-    ResponseEntity<Role>  getRole(@PathVariable String roleName) {
+    @GetMapping(path = "/organization/{org_id}/roles/{name}")
+    public ResponseEntity<Role> getRole(@PathVariable String name, @PathVariable String org_id) {
+        logger.info("Entering getting role.");
         try {
-            Optional<Role> res = roleRepo.findById(roleName);
+            Optional<Role> res = roleRepo.findById(name);
             if (res.isPresent()) {
                 // Get the permissions
-                //List<RolePermission> permissions = rolePermissionRepo.findAllByAppId(roleName);
-                //Role ret = res.get();
+                List<RolePermission> permissions = rolePermissionRepo.findAllByRoleName(name);
+                List<Permission> p = permissions.stream().map(t-> new Permission(t.getAction(), t.getResource())).collect(Collectors.toList());
+                return new ResponseEntity<>(new Role(res.get().getName(), res.get().getOrganization(), res.get().getCreateTime(), res.get().getDescription(), p), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            logger.error(e.toString());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping(path = "/organization/{org_id}/roles")
+    public  ResponseEntity<Set<Role>> listRoles(@PathVariable String org_id) {
+        return null;
+    }
+
+    @DeleteMapping(path = "/organization/{org_id}/role/{name}")
+    public ResponseEntity<Role>  deleteRole(@PathVariable String name, @PathVariable String org_id) {
+        logger.info("Entering getting role.");
+        try {
+            Optional<Role> res = roleRepo.findById(name);
+            if (res.isPresent()) {
                 return new ResponseEntity<>(res.get(), HttpStatus.OK);
             }
         } catch (Exception e) {
