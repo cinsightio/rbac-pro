@@ -18,7 +18,9 @@ public class Organization {
     @Id
     private String id;
 
+    // Alias
     private String name;
+    // The creator becomes the only owner and can perform anything in this org.
     private String owner;
     private String description;
     private String creator;

@@ -10,16 +10,19 @@ import javax.servlet.http.HttpServletResponse;
 
 
 public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
+
+    public static final String ORG = "organization";
     private static final Logger logger = LoggerFactory
             .getLogger(AuthenticationInterceptor.class);
 
+    //TODO: This should perform check on the token in the cookies.
     @Override
     public boolean preHandle(HttpServletRequest request,
                              HttpServletResponse response, Object handler) throws Exception {
         long startTime = System.currentTimeMillis();
-        logger.info("Request URL::" + request.getRequestURL().toString()
-                + ":: Start Time=" + System.currentTimeMillis());
-        request.setAttribute("startTime", startTime);
+        logger.info("Setting organization attribute in request");
+        // TODO: should have got this from token in header and perform internal lookup.
+        request.setAttribute(ORG, "taest");
         return true;
     }
 
@@ -27,18 +30,11 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
     public void postHandle(HttpServletRequest request,
                            HttpServletResponse response, Object handler,
                            ModelAndView modelAndView) throws Exception {
-        System.out.println("Request URL::" + request.getRequestURL().toString()
-                + " Sent to Handler :: Current Time=" + System.currentTimeMillis());
     }
 
     @Override
     public void afterCompletion(HttpServletRequest request,
                                 HttpServletResponse response, Object handler, Exception ex)
             throws Exception {
-        long startTime = (Long) request.getAttribute("startTime");
-        logger.info("Request URL::" + request.getRequestURL().toString()
-                + ":: End Time=" + System.currentTimeMillis());
-        logger.info("Request URL::" + request.getRequestURL().toString()
-                + ":: Time Taken=" + (System.currentTimeMillis() - startTime));
     }
 }

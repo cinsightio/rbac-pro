@@ -27,3 +27,14 @@ CREATE TABLE `role_permission` (
   CONSTRAINT `org_fk_role_per` FOREIGN KEY (`org_id`) REFERENCES `organization` (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
+CREATE TABLE `user_role` (
+  `role` varchar(36) NOT NULL,
+  `user` varchar(100) NOT NULL,
+  `org_id` varchar(36) NOT NULL,
+  `create_time` datetime DEFAULT NULL,
+  `create_by` varchar(100) NOT NULL,
+  CONSTRAINT pk_role_user PRIMARY KEY (`role`,`user`, `org_id`),
+  CONSTRAINT `fk_role` FOREIGN KEY (`role`) REFERENCES `role` (`name`),
+  CONSTRAINT `org_fk_org_id` FOREIGN KEY (`org_id`) REFERENCES `organization` (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+

@@ -36,9 +36,11 @@ public class OrganizationController {
         return orgRepo.save(n);
     }
 
-    @GetMapping("/organization/{organizationId}")
-    public Organization list(@PathVariable String organizationId) {
-        Optional<Organization> r = orgRepo.findById(organizationId);
+    @GetMapping("/organization")
+    public Organization getOrganization() {
+        // This needs to come from authentication context
+        String org_id = "test";
+        Optional<Organization> r = orgRepo.findById(org_id);
         if (r.isPresent()) {
             return r.get();
         } else {
