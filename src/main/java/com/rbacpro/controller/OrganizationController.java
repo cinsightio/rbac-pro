@@ -1,6 +1,7 @@
 package com.rbacpro.controller;
 
 
+import com.rbacpro.interceptor.AuthenticationInterceptor;
 import com.rbacpro.model.Organization;
 import com.rbacpro.repository.OrganizationRepository;
 import org.slf4j.Logger;
@@ -9,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
@@ -37,9 +40,9 @@ public class OrganizationController {
     }
 
     @GetMapping("/organization")
-    public Organization getOrganization() {
+    public Organization getOrganization(HttpServletRequest request, HttpServletResponse res) {
         // This needs to come from authentication context
-        String org_id = "test";
+        String org_id = (String)request.getAttribute(AuthenticationInterceptor.ORG);
         Optional<Organization> r = orgRepo.findById(org_id);
         if (r.isPresent()) {
             return r.get();

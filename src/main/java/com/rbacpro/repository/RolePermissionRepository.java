@@ -10,6 +10,6 @@ import java.util.List;
 
 public interface RolePermissionRepository extends JpaRepository<RolePermission, String> {
 
-    @Query(value = "SELECT * FROM Role_Permission WHERE role = ?1 ", nativeQuery = true)
-    List<RolePermission> findAllByRoleName(String name);
+    @Query(value = "SELECT * FROM Role_Permission WHERE role = ?1 AND org_id = ?2", nativeQuery = true)
+    List<RolePermission> findAllByRoleName(String name, String organization);
 }

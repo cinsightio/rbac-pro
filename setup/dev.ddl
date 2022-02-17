@@ -12,6 +12,7 @@ CREATE TABLE `role` (
   `name` varchar(100) NOT NULL,
   `org_id` varchar(36) NOT NULL,
   `description` varchar(1000) DEFAULT NULL,
+  `stage` varchar(100) DEFAULT NULL,
   `create_time` datetime DEFAULT NULL,
    PRIMARY KEY (`name`),
    CONSTRAINT `org_fk_role` FOREIGN KEY (`org_id`) REFERENCES `organization` (`id`)

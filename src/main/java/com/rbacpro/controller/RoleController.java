@@ -6,13 +6,12 @@ import com.rbacpro.model.*;
 import com.rbacpro.repository.OrganizationRepository;
 import com.rbacpro.repository.RolePermissionRepository;
 import com.rbacpro.repository.RoleRepository;
-import com.rbacpro.repository.RoleUserRepository;
+import com.rbacpro.repository.UserRoleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,10 +38,11 @@ public class RoleController {
     @Autowired
     private RolePermissionRepository rolePermissionRepo;
     @Autowired
-    private RoleUserRepository roleUserRepo;
+    private UserRoleRepository roleUserRepo;
 
     @PostMapping("/role")
-    public ResponseEntity<Role> create(@RequestBody Role request) {
+    public ResponseEntity<Role> create(@RequestBody Role request, HttpServletRequest req, HttpServletResponse res) {
+        String org_id = (String)req.getAttribute(AuthenticationInterceptor.ORG);
         logger.info("Entering create new role.");
         Role n = new Role();
         n.setOrganization(request.getOrganization());
@@ -56,16 +56,17 @@ public class RoleController {
     @PostMapping("/role/permission")
     public ResponseEntity putPermission(@RequestBody RolePermission permission, HttpServletRequest request, HttpServletResponse res) {
         logger.info("Entering creating new permission.");
+        String org_id = (String)request.getAttribute(AuthenticationInterceptor.ORG);
         try {
             logger.info(permission.toString());
-            if(!orgRepo.findById((String)request.getAttribute(AuthenticationInterceptor.ORG)).isPresent()) {
+            if(!orgRepo.findById(org_id).isPresent()) {
                 return new ResponseEntity<>("Organization not found.", HttpStatus.NOT_FOUND);
             }
             if(!roleRepo.findById(permission.getRole()).isPresent()) {
                 return new ResponseEntity<>("Role not found.", HttpStatus.NOT_FOUND);
             }
             // Always set the organization correctly
-            permission.setOrganization((String)request.getAttribute(AuthenticationInterceptor.ORG));
+            permission.setOrganization(org_id);
             rolePermissionRepo.save(permission);
         } catch (Exception e) {
            logger.error(e.toString());
@@ -75,12 +76,14 @@ public class RoleController {
     }
 
     @PostMapping("/user/role")
-    public ResponseEntity associateUserRole(@RequestBody UserRole assignment) {
+    public ResponseEntity associateUserRole(@RequestBody UserRole assignment, HttpServletRequest request, HttpServletResponse res) {
         logger.info("Entering creating new permission.");
+        String org_id = (String)request.getAttribute(AuthenticationInterceptor.ORG);
         try {
             logger.info(assignment.toString());
             assignment.setCreatedBy("system@rbacpro.com");
             assignment.setCreateTime(ZonedDateTime.now(ZoneId.of("America/Los_Angeles")));
+            assignment.setOrganization(org_id);
             roleUserRepo.save(assignment);
         } catch (Exception e) {
             logger.error(e.toString());
@@ -90,10 +93,12 @@ public class RoleController {
     }
 
     @DeleteMapping(value = "/role/permission")
-    public ResponseEntity deletePermission(@RequestBody RolePermission permission) {
+    public ResponseEntity deletePermission(@RequestBody RolePermission permission, HttpServletRequest request, HttpServletResponse res) {
         logger.info("Entering deleting permission.");
+        String org_id = (String)request.getAttribute(AuthenticationInterceptor.ORG);
         try {
             logger.info(permission.toString());
+            permission.setOrganization(org_id);
             rolePermissionRepo.delete(permission);
         } catch (Exception e) {
             logger.error(e.toString());
@@ -103,13 +108,14 @@ public class RoleController {
     }
 
     @GetMapping(path = "/roles/{name}")
-    public ResponseEntity<Role> getRole(@PathVariable String name) {
+    public ResponseEntity<Role> getRole(@PathVariable String name, HttpServletRequest request) {
         logger.info("Entering getting role.");
+        String org_id = (String)request.getAttribute(AuthenticationInterceptor.ORG);
         try {
             Optional<Role> res = roleRepo.findById(name);
             if (res.isPresent()) {
                 // Get the permissions
-                List<RolePermission> permissions = rolePermissionRepo.findAllByRoleName(name);
+                List<RolePermission> permissions = rolePermissionRepo.findAllByRoleName(name, org_id);
                 List<Permission> p = permissions.stream().map(t-> new Permission(t.getAction(), t.getResource())).collect(Collectors.toList());
                 return new ResponseEntity<>(new Role(res.get().getName(), res.get().getOrganization(), res.get().getCreateTime(), res.get().getDescription(), p), HttpStatus.OK);
             } else {
@@ -122,17 +128,24 @@ public class RoleController {
     }
 
     @GetMapping(path = "/roles")
-    public  ResponseEntity<Set<Role>> listRoles() {
+    public  ResponseEntity<Set<Role>> listRoles(HttpServletRequest request, HttpServletResponse res) {
+        String org_id = (String)request.getAttribute(AuthenticationInterceptor.ORG);
         return null;
     }
 
     @DeleteMapping(path = "/role/{name}")
-    public ResponseEntity<Role>  deleteRole(@PathVariable String name) {
+    public ResponseEntity<Role>  deleteRole(@PathVariable String name, HttpServletRequest request) {
         logger.info("Entering getting role.");
+        String org_id = (String)request.getAttribute(AuthenticationInterceptor.ORG);
         try {
-            Optional<Role> res = roleRepo.findById(name);
-            if (res.isPresent()) {
-                return new ResponseEntity<>(res.get(), HttpStatus.OK);
+            List<Role> res = roleRepo.findAllByRoleName(name, org_id);
+            if (res.size() == 1) {
+                return new ResponseEntity<>(res.get(0), HttpStatus.OK);
+            } else if(res.size() > 1) {
+                logger.error("Getting duplicate roles in one organization.");
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            } else {
+                logger.debug("No roles found");
             }
         } catch (Exception e) {
             logger.error(e.toString());
