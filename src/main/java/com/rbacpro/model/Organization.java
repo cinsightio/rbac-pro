@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import java.time.ZonedDateTime;
 
 @Data
@@ -19,8 +20,10 @@ public class Organization {
     private String id;
 
     // Alias
+    @NotBlank
     private String name;
     // The creator becomes the only owner and can perform anything in this org.
+    @NotBlank
     private String owner;
     private String description;
     private String creator;

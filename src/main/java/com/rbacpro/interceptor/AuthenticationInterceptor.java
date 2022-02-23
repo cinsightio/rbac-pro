@@ -2,6 +2,7 @@ package com.rbacpro.interceptor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -10,6 +11,9 @@ import javax.servlet.http.HttpServletResponse;
 
 
 public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
+
+    @Value("${root.token}")
+    private String rootToken;
 
     public static final String ORG = "organization";
     private static final Logger logger = LoggerFactory

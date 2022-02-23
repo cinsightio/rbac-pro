@@ -512,7 +512,7 @@ export class WizardExample extends React.Component {
         return (
             <Container>
                 <HeaderMain 
-                    title="Add Data Source"
+                    title="Add Data Sources"
                     className="my-4"
                 />
                 <Card>
