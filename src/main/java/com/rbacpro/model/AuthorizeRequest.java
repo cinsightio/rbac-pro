@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -13,4 +15,6 @@ public class AuthorizeRequest {
     private String user;
     private String action;
     private String resource;
+    // This tracks the details of this request
+    Map<String, String> context;
 }

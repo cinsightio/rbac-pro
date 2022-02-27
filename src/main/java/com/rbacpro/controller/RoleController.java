@@ -1,6 +1,9 @@
 package com.rbacpro.controller;
 
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.rbacpro.interceptor.AuthenticationInterceptor;
 import com.rbacpro.model.*;
 import com.rbacpro.repository.OrganizationRepository;
@@ -67,6 +70,7 @@ public class RoleController {
             }
             // Always set the organization correctly
             permission.setOrganization(org_id);
+
             rolePermissionRepo.save(permission);
         } catch (Exception e) {
            logger.error(e.toString());
@@ -116,7 +120,12 @@ public class RoleController {
             if (res.isPresent()) {
                 // Get the permissions
                 List<RolePermission> permissions = rolePermissionRepo.findAllByRoleName(name, org_id);
-                List<Permission> p = permissions.stream().map(t-> new Permission(t.getAction(), t.getResource())).collect(Collectors.toList());
+                if(permissions.isEmpty()) {
+                    logger.info("No permissions for this role.");
+                } else {
+                    logger.info("Got permissions " + permissions.size());
+                }
+                List<Permission> p = permissions.stream().filter(t-> t != null).map(t-> new Permission(t.getAction(), t.getResource())).collect(Collectors.toList());
                 return new ResponseEntity<>(new Role(res.get().getName(), res.get().getOrganization(), res.get().getCreateTime(), res.get().getDescription(), p), HttpStatus.OK);
             } else {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -128,18 +137,39 @@ public class RoleController {
     }
 
     @GetMapping(path = "/roles")
-    public  ResponseEntity<Set<Role>> listRoles(HttpServletRequest request, HttpServletResponse res) {
+    public  ResponseEntity<List<Role>> listRoles(HttpServletRequest request, HttpServletResponse res) {
+        logger.info("Entering listing all roles in org.");
         String org_id = (String)request.getAttribute(AuthenticationInterceptor.ORG);
-        return null;
+        try{
+            List<Role> results = roleRepo.findAllRolesInOrg(org_id);
+            return new ResponseEntity<>(results, HttpStatus.OK);
+        } catch(Exception e) {
+        }
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+
+    @GetMapping(path = "/user/{userId}/roles")
+    public  ResponseEntity<List<UserRole>> listRolesForUsers(@PathVariable String userId, HttpServletRequest request, HttpServletResponse res) {
+        logger.info("Entering listing all roles in org.");
+        String org_id = (String)request.getAttribute(AuthenticationInterceptor.ORG);
+        try{
+            List<UserRole> results = roleUserRepo.findAllByUserName(userId, org_id);
+            return new ResponseEntity<>(results, HttpStatus.OK);
+        } catch(Exception e) {
+        }
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @DeleteMapping(path = "/role/{name}")
     public ResponseEntity<Role>  deleteRole(@PathVariable String name, HttpServletRequest request) {
-        logger.info("Entering getting role.");
+        logger.info("Entering delete role.");
         String org_id = (String)request.getAttribute(AuthenticationInterceptor.ORG);
         try {
-            List<Role> res = roleRepo.findAllByRoleName(name, org_id);
+            List<Role> res = roleRepo.findAllByRoleNameInOrg(name, org_id);
             if (res.size() == 1) {
+                roleRepo.delete(res.get(0));
+                logger.info("Role is deleted.");
                 return new ResponseEntity<>(res.get(0), HttpStatus.OK);
             } else if(res.size() > 1) {
                 logger.error("Getting duplicate roles in one organization.");

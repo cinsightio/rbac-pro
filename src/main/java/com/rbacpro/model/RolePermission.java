@@ -11,20 +11,21 @@ import java.io.Serializable;
 @EqualsAndHashCode
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "role_permission")
+@Table(name = "role_permission", uniqueConstraints={
+        @UniqueConstraint(columnNames = {"role", "operation", "resource", "org_id"})
+})
 @ToString
 @IdClass(RolePermission.class)
 public class RolePermission implements Serializable {
-    @Id
+
     @NotBlank
+    @Id
     private String role;
-    @Id
     @NotBlank
+    @Column(name= "operation")
     private String action;
-    @Id
     @NotBlank
     private String resource;
     @Column(name = "org_id")
-    @Id
     private String organization;
 }

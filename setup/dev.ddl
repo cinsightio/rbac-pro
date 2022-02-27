@@ -20,12 +20,12 @@ CREATE TABLE `role` (
 
 CREATE TABLE `role_permission` (
   `role` varchar(36) NOT NULL,
-  `action` varchar(100) NOT NULL,
+  `operation` varchar(100) NOT NULL,
   `resource` varchar(100) NOT NULL,
   `org_id` varchar(36) NOT NULL,
-  CONSTRAINT pk_PersonID PRIMARY KEY (`role`,`action`, `resource`),
-  CONSTRAINT `system_fk_role` FOREIGN KEY (`role`) REFERENCES `role` (`name`),
-  CONSTRAINT `org_fk_role_per` FOREIGN KEY (`org_id`) REFERENCES `organization` (`id`)
+   UNIQUE KEY (`role`, `operation`, `resource`, `org_id`),
+   CONSTRAINT `system_fk_role` FOREIGN KEY (`role`) REFERENCES `role` (`name`),
+   CONSTRAINT `org_fk_role_per` FOREIGN KEY (`org_id`) REFERENCES `organization` (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 CREATE TABLE `user_role` (
